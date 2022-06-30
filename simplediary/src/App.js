@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import "./App.css";
 import DiaryEditor from "./DiaryEditor";
 import DiaryList from "./DiaryList";
@@ -32,7 +32,8 @@ const App = () => {
         }, 1500);
     }, []);
 
-    const onCreate = (author, content, emotion) => {
+    // useCallback으로 프롭스로 원래 2번 호출되던거 막아줌
+    const onCreate = useCallback((author, content, emotion) => {
         const created_date = new Date().getTime();
         const newItem = {
             author,
@@ -42,21 +43,21 @@ const App = () => {
             id: dataId.current
         };
         dataId.current += 1;
-        setData([newItem, ...data]);
-    };
+        //여기서 함수형태로 데이터를 전달하지 않으면  onCreate시점에 data가 빈값이기 때문에 새로 저장된 값만 나오게된다
+        setData((data)=>[newItem, ...data]);
+    },[data]);
 
-    const onRemove = (targetId) => {
-        const newDiaryList = data.filter((it) => it.id !== targetId);
-        setData(newDiaryList);
-    };
+    const onRemove = useCallback((targetId) => {
+        setData(data=>data.filter((it) => it.id !== targetId));
+    },[]);
 
-    const onEdit = (targetId, newContent) => {
-        setData(
+    const onEdit = useCallback((targetId, newContent) => {
+        setData((data)=>
             data.map((it) =>
                 it.id === targetId ? { ...it, content: newContent } : it
             )
         );
-    };
+    },[]);
     const getDiaryAnalysis = useMemo(
         ()=>{
         console.log("일기 분석 시작");
